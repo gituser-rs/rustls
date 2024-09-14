@@ -23,7 +23,6 @@ use crate::crypto::{ActiveKeyExchange, KeyExchangeAlgorithm};
 use crate::enums::{AlertDescription, CipherSuite, ContentType, HandshakeType, ProtocolVersion};
 use crate::error::{Error, PeerIncompatible, PeerMisbehaved};
 use crate::hash_hs::HandshakeHashBuffer;
-#[cfg(feature = "logging")]
 use crate::log::{debug, trace};
 use crate::msgs::base::Payload;
 use crate::msgs::enums::{Compression, ECPointFormat, ExtensionType, PSKKeyExchangeMode};
@@ -243,16 +242,22 @@ fn emit_client_hello_for_retry(
     // should be unreachable thanks to config builder
     assert!(!supported_versions.is_empty());
 
+    // offer groups which are usable for any offered version
+    let offered_groups = config
+        .provider
+        .kx_groups
+        .iter()
+        .filter(|skxg| {
+            supported_versions
+                .iter()
+                .any(|v| skxg.usable_for_version(*v))
+        })
+        .map(|skxg| skxg.name())
+        .collect();
+
     let mut exts = vec![
         ClientExtension::SupportedVersions(supported_versions),
-        ClientExtension::NamedGroups(
-            config
-                .provider
-                .kx_groups
-                .iter()
-                .map(|skxg| skxg.name())
-                .collect(),
-        ),
+        ClientExtension::NamedGroups(offered_groups),
         ClientExtension::SignatureAlgorithms(
             config
                 .verifier
@@ -1029,7 +1034,7 @@ impl ExpectServerHelloOrHelloRetryRequest {
 
         let key_share = match req_group {
             Some(group) if group != offered_key_share.group() => {
-                let skxg = match config.find_kx_group(group) {
+                let skxg = match config.find_kx_group(group, ProtocolVersion::TLSv1_3) {
                     Some(skxg) => skxg,
                     None => {
                         return Err(cx.common.send_fatal_alert(

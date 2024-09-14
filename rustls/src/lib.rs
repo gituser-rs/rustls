@@ -63,6 +63,7 @@
 //!     from [`RustCrypto`] for cryptography.
 //!   * [`rustls-post-quantum`]: an experimental provider that adds support for post-quantum
 //!     key exchange to the default aws-lc-rs provider.
+//!   * [`rustls-wolfcrypt-provider`] - a work-in-progress provider that uses [`wolfCrypt`] for cryptography.
 //!
 //! [`rustls-mbedtls-provider`]: https://github.com/fortanix/rustls-mbedtls-provider
 //! [`mbedtls`]: https://github.com/Mbed-TLS/mbedtls
@@ -71,6 +72,8 @@
 //! [`rustls-rustcrypto`]: https://github.com/RustCrypto/rustls-rustcrypto
 //! [`RustCrypto`]: https://github.com/RustCrypto
 //! [`rustls-post-quantum`]: https://crates.io/crates/rustls-post-quantum
+//! [`rustls-wolfcrypt-provider`]: https://github.com/wolfSSL/rustls-wolfcrypt-provider
+//! [`wolfCrypt`]: https://www.wolfssl.com/products/wolfcrypt
 //!
 //! #### Custom provider
 //!
@@ -366,6 +369,9 @@ extern crate alloc;
 #[cfg(any(feature = "std", test))]
 extern crate std;
 
+#[cfg(doc)]
+use crate::crypto::CryptoProvider;
+
 // Import `test` sysroot crate for `Bencher` definitions.
 #[cfg(bench)]
 #[allow(unused_extern_crates)]
@@ -375,16 +381,13 @@ extern crate test;
 #[cfg(feature = "logging")]
 use log;
 
-#[cfg(doc)]
-use crate::crypto::CryptoProvider;
-
 #[cfg(not(feature = "logging"))]
-#[macro_use]
 mod log {
     macro_rules! trace    ( ($($tt:tt)*) => {{}} );
     macro_rules! debug    ( ($($tt:tt)*) => {{}} );
-    macro_rules! warn     ( ($($tt:tt)*) => {{}} );
     macro_rules! error    ( ($($tt:tt)*) => {{}} );
+    macro_rules! _warn    ( ($($tt:tt)*) => {{}} );
+    pub(crate) use {_warn as warn, debug, error, trace};
 }
 
 #[macro_use]

@@ -6,7 +6,6 @@ use pki_types::CertificateDer;
 use crate::crypto::SupportedKxGroup;
 use crate::enums::{AlertDescription, ContentType, HandshakeType, ProtocolVersion};
 use crate::error::{Error, InvalidMessage, PeerMisbehaved};
-#[cfg(feature = "logging")]
 use crate::log::{debug, error, warn};
 use crate::msgs::alert::AlertMessagePayload;
 use crate::msgs::base::Payload;
@@ -382,7 +381,7 @@ impl CommonState {
 
     /// Mark the connection as ready to send application data.
     ///
-    /// Also flush `sendable_plaintext` if it is `Some`.  
+    /// Also flush `sendable_plaintext` if it is `Some`.
     pub(crate) fn start_outgoing_traffic(
         &mut self,
         sendable_plaintext: &mut Option<&mut ChunkVecBuffer>,
@@ -395,7 +394,7 @@ impl CommonState {
 
     /// Mark the connection as ready to send and receive application data.
     ///
-    /// Also flush `sendable_plaintext` if it is `Some`.  
+    /// Also flush `sendable_plaintext` if it is `Some`.
     pub(crate) fn start_traffic(&mut self, sendable_plaintext: &mut Option<&mut ChunkVecBuffer>) {
         self.may_receive_application_data = true;
         self.start_outgoing_traffic(sendable_plaintext);

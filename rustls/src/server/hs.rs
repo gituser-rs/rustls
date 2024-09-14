@@ -17,7 +17,6 @@ use crate::enums::{
 };
 use crate::error::{Error, PeerIncompatible, PeerMisbehaved};
 use crate::hash_hs::{HandshakeHash, HandshakeHashBuffer};
-#[cfg(feature = "logging")]
 use crate::log::{debug, trace};
 use crate::msgs::enums::{Compression, ExtensionType, NamedGroup};
 #[cfg(feature = "tls12")]
@@ -431,7 +430,9 @@ impl ExpectClientHello {
                 .provider
                 .kx_groups
                 .iter()
-                .find(|skxg| skxg.name() == *offered_group);
+                .find(|skxg| {
+                    skxg.usable_for_version(selected_version) && skxg.name() == *offered_group
+                });
 
             match offered_group.key_exchange_algorithm() {
                 KeyExchangeAlgorithm::DHE => {
